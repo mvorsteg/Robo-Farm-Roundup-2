@@ -149,7 +149,7 @@ public class MainMenu : MonoBehaviour
     public void AddScore()
     {
         int score = newScore;
-        string name = input.GetComponent<Transform>().GetChild(1).GetComponent<Text>().text;
+        string name = input.GetComponent<Transform>().GetChild(input.GetComponent<Transform>().childCount-1).GetComponent<Text>().text;
         if (name.Length < 1)
             name = "anonymous";
         else if (name.Length > 16)

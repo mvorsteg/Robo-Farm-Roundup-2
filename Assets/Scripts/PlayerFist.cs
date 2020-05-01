@@ -17,7 +17,7 @@ public class PlayerFist : MonoBehaviour
 
     void OnTriggerEnter(Collider target)
     {
-        if ((anim.GetCurrentAnimatorStateInfo(0).IsName("punch") || anim.GetCurrentAnimatorStateInfo(0).IsName("punch_left")) && target.tag == target_tag)
+        if ((anim.GetCurrentAnimatorStateInfo(1).IsName("punch") || anim.GetCurrentAnimatorStateInfo(1).IsName("punch_left")) && target.tag == target_tag)
         {
             Vector3 angle = player.GetComponent<Transform>().forward;
             if (target_tag == "Enemy")

@@ -1,67 +1,30 @@
 fileFormatVersion: 2
-guid: d623cd35a78380d4eb0457c4e483abed
+guid: a20ea7771cebbda4696ef82ef45481a0
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
-    100002: Rig
-    100004: RigHead
-    100006: RigLArm1
-    100008: RigLArm2
-    100010: RigLLeg1
-    100012: RigLLeg2
-    100014: RigLLegAnkle
-    100016: RigLLegFoot1
-    100018: RigLLegPlatform
-    100020: RigNeck
-    100022: RigPelvis
-    100024: RigRArm1
-    100026: RigRArm2
-    100028: RigRibcage
-    100030: RigRLeg1
-    100032: RigRLeg2
-    100034: RigRLegAnkle
-    100036: RigRLegFoot1
-    100038: RigRLegPlatform
-    100040: RigSpine
-    100042: RigTail1
-    100044: RigTail2
-    100046: Toon Chicken
     400000: //RootNode
-    400002: Rig
-    400004: RigHead
-    400006: RigLArm1
-    400008: RigLArm2
-    400010: RigLLeg1
-    400012: RigLLeg2
-    400014: RigLLegAnkle
-    400016: RigLLegFoot1
-    400018: RigLLegPlatform
-    400020: RigNeck
-    400022: RigPelvis
-    400024: RigRArm1
-    400026: RigRArm2
-    400028: RigRibcage
-    400030: RigRLeg1
-    400032: RigRLeg2
-    400034: RigRLegAnkle
-    400036: RigRLegFoot1
-    400038: RigRLegPlatform
-    400040: RigSpine
-    400042: RigTail1
-    400044: RigTail2
-    400046: Toon Chicken
-    2100000: 'Material #2'
+    2100000: 01 - Default
+    2100002: 07 - Default
+    2100004: 02 - Default
+    2100006: 03 - Default
+    2100008: 05 - Default
+    2100010: 04 - Default
+    2100012: 01 - Default.010
+    2100014: 07 - Default.001
+    2100016: 02 - Default.005
+    2100018: 03 - Default.008
+    2100020: 05 - Default.004
+    2100022: 04 - Default.005
+    2100024: 07 - Default.002
     2300000: //RootNode
-    2300002: Toon Chicken
     3300000: //RootNode
-    3300002: Toon Chicken
-    4300000: Toon Chicken
-    9500000: //RootNode
-    13700000: Toon Chicken
+    4300000: cap-9
+    4300002: VikingHelmet
   externalObjects: {}
   materials:
-    importMaterials: 0
+    importMaterials: 1
     materialName: 0
     materialSearch: 1
     materialLocation: 1
@@ -79,7 +42,7 @@ ModelImporter:
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
     importConstraints: 0
-    animationCompression: 3
+    animationCompression: 1
     animationRotationError: 0.5
     animationPositionError: 0.5
     animationScaleError: 0.5
@@ -93,6 +56,7 @@ ModelImporter:
     globalScale: 1
     meshCompression: 0
     addColliders: 0
+    useSRGBMaterialColor: 1
     importVisibility: 1
     importBlendShapes: 1
     importCameras: 1
@@ -110,11 +74,16 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
     tangentImportMode: 3
     normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
   importAnimation: 1
   copyAvatar: 0
   humanDescription:
@@ -129,12 +98,11 @@ ModelImporter:
     legStretch: 0.05
     feetSpacing: 0
     rootMotionBoneName: 
-    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
     hasTranslationDoF: 0
-    hasExtraRoot: 1
+    hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 2
+  animationType: 0
   humanoidOversampling: 1
   additionalBone: 0
   userData: 

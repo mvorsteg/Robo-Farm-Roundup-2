@@ -3,13 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour
-{
+{   
+    // if you modify these anywhere I'll cut your nuts off
+    private float startSpeed;
+    private float rollSpeed;
+    private float hopSpeed;
+    private float invincibleSpeed;
+    
     public Rigidbody ragdoll;
     public GameObject mainCamera;
     public Renderer render;
     public Animator anim;
     public float speed;
     public bool punching;
+    public bool punchingRight = true;
     public bool rolling;
     private bool invincible;
     private bool regenFuel;
@@ -24,6 +31,11 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        startSpeed = speed;
+        rollSpeed = 3.0f * speed;
+        hopSpeed = 2.0f * speed;
+        invincibleSpeed = 1.25f * speed;
+
         regenFuel = true;
         fuel = 5;
         SetRigidBody(true);
@@ -77,7 +89,9 @@ public class Player : MonoBehaviour
 
     void Punch()
     {
+        anim.SetBool("rightPunch", punchingRight);
         anim.SetTrigger("punch");
+        punchingRight = !punchingRight;
     }
 
     void Roll(float speedDir)
@@ -127,12 +141,12 @@ public class Player : MonoBehaviour
     IEnumerator RollCoroutine()
     {
         regenFuel = false;
-        speed *= 3;
+        speed = rollSpeed;
         invincible = true;
         rolling = true;
         yield return new WaitForSeconds(0.3f);
         rolling = false;
-        speed /= 3;
+        speed = startSpeed;
         yield return new WaitForSeconds(0.5f);
         invincible = false;
         yield return new WaitForSeconds(0.2f);
@@ -142,10 +156,10 @@ public class Player : MonoBehaviour
     IEnumerator HopCoroutine()
     {
         regenFuel = false;
-        speed *= 2;
+        speed = hopSpeed;
         invincible = true;
         yield return new WaitForSeconds(0.3f);
-        speed /= 2;
+        speed = startSpeed;
         yield return new WaitForSeconds(0.6f);
         invincible = false;
         regenFuel = true;
@@ -204,8 +218,7 @@ public class Player : MonoBehaviour
 
     IEnumerator InvincibleCoroutine()
     {
-        float oldSpeed = speed;
-        speed *= 1.25f;
+        speed = invincibleSpeed;
         for (int i = 0; i < 5; i++)
         {
             render.enabled = false;
@@ -213,7 +226,7 @@ public class Player : MonoBehaviour
             render.enabled = true;
             yield return new WaitForSeconds(0.25F);
         }
-        speed = oldSpeed;
+        speed = startSpeed;
         invincible = false;
     }
 
