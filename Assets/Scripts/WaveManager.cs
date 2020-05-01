@@ -57,7 +57,7 @@ public class WaveManager : MonoBehaviour
         // linear method : difficulty scales too fast
         // int waveCredits = 25 * (wave - 1) + 50;
         // logarithmic method : easier difficulty scale
-        int waveCredits = 1;//50 * (int)Mathf.Log((float)wave, 5.0f) + 50;
+        int waveCredits = 50 * (int)Mathf.Log((float)wave, 5.0f) + 50;
         StartCoroutine("WaveTitleCoroutine");
         while (waveCredits > 0)
         {
