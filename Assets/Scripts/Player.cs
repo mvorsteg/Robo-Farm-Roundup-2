@@ -26,7 +26,8 @@ public class Player : MonoBehaviour
     private float fuel;
     public GameObject healthBar;
     public GameObject fuelBar;
-    public Audio aud;   
+    public Audio aud;
+    public GameObject hats;  
 
     // Start is called before the first frame update
     void Start()
@@ -46,6 +47,11 @@ public class Player : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
         punching = false;
+        int hatIndex = PlayerPrefs.GetInt("hat");
+        if (hatIndex > 0) {
+            hats.transform.GetChild(hatIndex - 1).gameObject.SetActive(true);
+        }
+        
     }
 
     // Update is called once per frame
@@ -53,7 +59,6 @@ public class Player : MonoBehaviour
     {
         if (live)
         {
-            mainCamera.GetComponent<Transform>().Rotate(-Input.GetAxis("Mouse Y"), 0, 0);
             transform.Rotate(0, Input.GetAxis("Mouse X"), 0);
             float speedInputX = Input.GetAxis("Horizontal");
             anim.SetFloat("speedX", speedInputX);
@@ -61,7 +66,11 @@ public class Player : MonoBehaviour
             anim.SetFloat("speedY", speedInputY);
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
-                Punch();
+                Punch(false);
+            }
+            else if (Input.GetKeyDown(KeyCode.Mouse1))
+            {
+                Punch(true);
             }
             else if (Input.GetKeyDown(KeyCode.Space))
             {
@@ -87,9 +96,13 @@ public class Player : MonoBehaviour
         }
     }
 
-    void Punch()
+    void Punch(bool right)
     {
-        anim.SetBool("rightPunch", punchingRight);
+        if (PlayerPrefs.GetInt("invertPunch") == 1)
+        {
+            right = !right;
+        }
+        anim.SetBool("rightPunch", right);
         anim.SetTrigger("punch");
         punchingRight = !punchingRight;
     }
