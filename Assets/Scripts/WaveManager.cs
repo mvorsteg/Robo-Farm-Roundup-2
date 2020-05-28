@@ -7,110 +7,131 @@ using UnityEngine.SceneManagement;
 public class WaveManager : MonoBehaviour
 {
 
-    private class Pair
+    /*  data structure used to hold an enemy's health, material, and behavior */
+    private class Tuple
     {
         public int hp;
+        public int type;
         public EnemyTest.Behavior behavior;
         public Material material;
-
-        public Pair(EnemyTest.Behavior behavior, int hp, Material material)
+        //  constructor
+        public Tuple(EnemyTest.Behavior behavior, int hp, Material material, int type)
         {
             this.hp = hp;
             this.behavior = behavior;
             this.material = material;
+            this.type = type;
         }
 
     }
     //singleton
     public static WaveManager WM;
-    public GameObject enemyPrefab;
+
+    public GameObject[] enemyPrefabs;
     public GameObject player;
-    private Queue<Pair> queue;
-    private int numEnemy;
-    private int wave;
     public GameObject waveText;
-    public Material white;
-    public Material yellow;
-    public Material red;
     public GameObject gameOver;
     public GameObject anyKey;
     public Audio aud;
+    public Material white;
+    public Material yellow;
+    public Material red;
+    public Material blue;
 
+    private Queue<Tuple> queue;
+
+    private int numEnemy = 0;
+    private int wave = 0;
+    private int bossWaveCounter;
+    
     private readonly int limit = 10;
 
     // Start is called before the first frame update
     void Start()
     {
+        bossWaveCounter = Random.Range(3, 6);
         WM = this;
-        queue = new Queue<Pair>();
-        numEnemy = 0;
-        wave = 0;
+        queue = new Queue<Tuple>();
         StartCoroutine("NextWaveCoroutine");
     }
 
+    /*  called to start the next wave by initializing the enemies that the player will fight
+        and queueing them up to spawn when others die */
     void NextWave()
     {
         aud.Levelup();
         player.GetComponent<Player>().RestoreHealth();
-        List<Pair> waveList = new List<Pair>();
+        List<Tuple> waveList = new List<Tuple>();
         wave++;
-        // linear method : difficulty scales too fast
-        // int waveCredits = 25 * (wave - 1) + 50;
         // logarithmic method : easier difficulty scale
         int waveCredits = 50 * (int)Mathf.Log((float)wave, 5.0f) + 50;
         StartCoroutine("WaveTitleCoroutine");
-        while (waveCredits > 0)
+        // check for boss wave
+        bossWaveCounter--;
+        if (bossWaveCounter == 0)
         {
-            //set up behavior
-            int roll = Random.Range(1,100);
-            EnemyTest.Behavior behavior;
-            if (roll > 85 && waveCredits > 4)
-            {
-                behavior = EnemyTest.Behavior.Charge;
-                waveCredits -= 5;
-            }
-            else if (roll > 70 && waveCredits > 3)
-            {
-                behavior = EnemyTest.Behavior.Smart;
-                waveCredits -= 4;
-            }
-            else if (roll > 55 && waveCredits > 3)
-            {
-                behavior = EnemyTest.Behavior.Orbit;
-                waveCredits -= 4;
-            }
-            else if (roll > 30 && waveCredits > 2)
-            {
-                behavior = EnemyTest.Behavior.Fast;
-                waveCredits -= 3;
-            }
-            else
-            {
-                behavior = EnemyTest.Behavior.Slow;
-                waveCredits -= 1;
-            }
-            //set bonus hp
-            int hp = 1;
-            roll = Random.Range(1,100);
-            Material mat = white;
-            if (roll > 90 && waveCredits > 1)
-            {
-                hp = 3;
-                waveCredits -= 2;
-                mat = red;
-            }
-            else if (roll > 75 && waveCredits > 0)
-            {
-                hp = 2;
-                waveCredits -= 1;
-                mat = yellow;
-            }
-            waveList.Add(new Pair(behavior, hp, mat));
+            // boss wave
+            Debug.Log("Enqueueing boss");
+            bossWaveCounter = Random.Range(3,6);
+            waveList.Add(new Tuple(EnemyTest.Behavior.Passive, 10, blue, 1));
         }
-        ShuffleQueue<Pair>(waveList, queue);
-        StartCoroutine("WaveStartCoroutine");
+        else
+        {
+            // regular wave
+            while (waveCredits > 0)
+            {
+                // set up behavior
+                int roll = Random.Range(1,100);
+                EnemyTest.Behavior behavior;
+                if (roll > 85 && waveCredits > 4)
+                {
+                    behavior = EnemyTest.Behavior.Charge;
+                    waveCredits -= 5;
+                }
+                else if (roll > 70 && waveCredits > 3)
+                {
+                    behavior = EnemyTest.Behavior.Smart;
+                    waveCredits -= 4;
+                }
+                else if (roll > 55 && waveCredits > 3)
+                {
+                    behavior = EnemyTest.Behavior.Orbit;
+                    waveCredits -= 4;
+                }
+                else if (roll > 30 && waveCredits > 2)
+                {
+                    behavior = EnemyTest.Behavior.Fast;
+                    waveCredits -= 3;
+                }
+                else
+                {
+                    behavior = EnemyTest.Behavior.Slow;
+                    waveCredits -= 1;
+                }
+                //set bonus hp
+                int hp = 1;
+                roll = Random.Range(1,100);
+                Material mat = white;
+                if (roll > 90 && waveCredits > 1)
+                {
+                    hp = 3;
+                    waveCredits -= 2;
+                    mat = red;
+                }
+                else if (roll > 75 && waveCredits > 0)
+                {
+                    hp = 2;
+                    waveCredits -= 1;
+                    mat = yellow;
+                }
+                waveList.Add(new Tuple(behavior, hp, mat, 0));
+            }
+        }
+        ShuffleQueue<Tuple>(waveList, queue);
+        StartCoroutine("WaveStartCoroutine");        
     }
 
+    /*  called whenever an enemy dies to spawn a new one */
     public void InformDeath()
     {
         numEnemy--;
@@ -124,10 +145,13 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-    private void SpawnEnemy(Pair pair)
+    /*  instantiate the next enemy in the queue in a random location 
+        that is not too close to the player */
+    private void SpawnEnemy(Tuple Tuple)
     {
-        int hp = pair.hp;
-        EnemyTest.Behavior behavior = pair.behavior;
+        int hp = Tuple.hp;
+        int type = Tuple.type;
+        EnemyTest.Behavior behavior = Tuple.behavior;
         Vector3 playerPos = player.GetComponent<Transform>().position;
         Vector3 pos = new Vector3(0,2,0);
         bool foundPos = false;
@@ -142,13 +166,13 @@ public class WaveManager : MonoBehaviour
                 foundPos = false;
             }
         }
-        //Debug.Log(pos);
-        GameObject enemy = Instantiate(enemyPrefab, pos, Quaternion.Euler(0, Random.Range(0,360), 0));
-        enemy.GetComponent<EnemyTest>().Initialize(behavior, hp);
-        enemy.GetComponentsInChildren<Renderer>()[0].material = pair.material;
+        GameObject enemy = Instantiate(enemyPrefabs[type], pos, Quaternion.Euler(0, Random.Range(0,360), 0));
+        enemy.GetComponent<Enemy>().Initialize(behavior, hp);
+        enemy.GetComponentsInChildren<Renderer>()[0].material = Tuple.material;
         numEnemy++;
     }
 
+    /*  randomizes the order that the enemies will spawn */
     private void ShuffleQueue<T>(List<T> lst, Queue<T> queue)
     {
         
@@ -161,6 +185,7 @@ public class WaveManager : MonoBehaviour
         }
     }
 
+    /*  spawns the enemies at the beginning of a wave with a delay between them */
     IEnumerator WaveStartCoroutine()
     {
         yield return new WaitForSeconds(1);
@@ -174,6 +199,7 @@ public class WaveManager : MonoBehaviour
         }
     }
 
+    /*  pulls the title across the screen at the beginning of a wave */
     IEnumerator WaveTitleCoroutine()
     {
         waveText.SetActive(true);
@@ -195,12 +221,14 @@ public class WaveManager : MonoBehaviour
         waveText.SetActive(false);
     }
 
+    /*  gives a delay after the previous wave ends until the next one starts */
     IEnumerator NextWaveCoroutine()
     {
         yield return new WaitForSeconds(3f);
         NextWave();
     }
 
+    /*  ends the game and shows the ending text */
     IEnumerator GameOverCoroutine()
     {
         gameOver.SetActive(true);
@@ -230,10 +258,49 @@ public class WaveManager : MonoBehaviour
         EndGame(wave-1);
     }
 
+    /*  switches to the leaderboard scene */
     public void EndGame(int score)
     {
+        UnlockHats();
         MainMenu.newScore = score;
         MainMenu.leaderboardMode = true;
         SceneManager.LoadScene(0);
+    }
+
+    /*  unlocks certain cosmetic options for the player */
+    public void UnlockHats()
+    {
+        int unlockedHats = PlayerPrefs.GetInt("unlockedHats");
+        // cowboy hat
+        if (wave == 3)
+            unlockedHats = unlockedHats | 1 << 0;
+        // sleepy hat
+        else if (wave == 5)
+            unlockedHats = unlockedHats | 1 << 1;
+        // top hat
+        else if (wave == 10)
+            unlockedHats = unlockedHats | 1 << 2;
+        // crown
+        else if (wave == 20)
+            unlockedHats = unlockedHats | 1 << 3;
+        // sombrero
+        if (PlayerPrefs.GetInt("numBoss1Defeated") > 0)
+            unlockedHats = unlockedHats | 1 << 4;
+        // mining helmet
+        if (PlayerPrefs.GetInt("numBoss2Defeated") > 0)
+            unlockedHats = unlockedHats | 1 << 5;
+        // police hat
+        if (PlayerPrefs.GetInt("numBoss3Defeated") > 0)
+            unlockedHats = unlockedHats | 1 << 6;
+        // shower cap
+        if (PlayerPrefs.GetInt("numWhiteEnemiesDefeated") > 1000)
+            unlockedHats = unlockedHats | 1 << 7;
+        // circle hat
+        if (PlayerPrefs.GetInt("numYellowEnemiesDefeated") > 500)
+            unlockedHats = unlockedHats | 1 << 8;
+        // viking hat
+        if (PlayerPrefs.GetInt("numRedEnemiesDefeated") > 250)
+            unlockedHats = unlockedHats | 1 << 9;
+        PlayerPrefs.SetInt("unlockedHats", unlockedHats);
     }
 }

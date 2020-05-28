@@ -10,6 +10,8 @@ public class Player : MonoBehaviour
     private float hopSpeed;
     private float invincibleSpeed;
     
+    public float sensitivity = 1.0f;
+
     public Rigidbody ragdoll;
     public GameObject mainCamera;
     public Renderer render;
@@ -36,6 +38,7 @@ public class Player : MonoBehaviour
         rollSpeed = 3.0f * speed;
         hopSpeed = 2.0f * speed;
         invincibleSpeed = 1.25f * speed;
+        sensitivity = PlayerPrefs.GetFloat("sensitivity");
 
         regenFuel = true;
         fuel = 5;
@@ -59,7 +62,7 @@ public class Player : MonoBehaviour
     {
         if (live)
         {
-            transform.Rotate(0, Input.GetAxis("Mouse X"), 0);
+            transform.Rotate(0, Input.GetAxis("Mouse X") * sensitivity, 0);
             float speedInputX = Input.GetAxis("Horizontal");
             anim.SetFloat("speedX", speedInputX);
             float speedInputY = Input.GetAxis("Vertical");
@@ -76,7 +79,14 @@ public class Player : MonoBehaviour
             {
                 Roll(speedInputY);
             }
-            transform.Translate((Vector3.forward*speedInputY + Vector3.right*speedInputX)*speed *Time.deltaTime);
+            if (rolling)
+            {
+                //transform.Translate(Vector3.forward*1.5f*speed*Time.deltaTime);
+            }
+            else
+            {
+                transform.Translate((Vector3.forward*speedInputY + Vector3.right*speedInputX)*speed *Time.deltaTime);
+            }
             if (regenFuel && fuel < 5)
             {
                 fuel += 0.02f;
@@ -157,10 +167,11 @@ public class Player : MonoBehaviour
         speed = rollSpeed;
         invincible = true;
         rolling = true;
-        yield return new WaitForSeconds(0.3f);
+        GetComponent<Rigidbody>().AddRelativeForce(new Vector3(0,0,850));
+        yield return new WaitForSeconds(0.5f);
         rolling = false;
         speed = startSpeed;
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.3f);
         invincible = false;
         yield return new WaitForSeconds(0.2f);
         regenFuel = true;
@@ -293,7 +304,7 @@ public class Player : MonoBehaviour
     {
         if (other.gameObject.tag == "Enemy" && rolling)
         {
-            other.gameObject.GetComponent<EnemyTest>().TakeDamage(Vector3.forward, 1000, 1f);
+            other.gameObject.GetComponent<Enemy>().TakeDamage(Vector3.forward, 1000, 1f);
         }
     }
 }

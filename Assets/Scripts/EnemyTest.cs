@@ -2,24 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyTest : MonoBehaviour
+public class EnemyTest : Enemy
 {
-    public GameObject player;
-    public float speed;
     public Behavior behavior;
-    public bool live;
-    private float health;
-    public float maxHealth;
-    public bool stunned;
-    private bool invincible;
-    private Animator anim;
-    public UnityEngine.AI.NavMeshAgent agent;
-    private float speedInputX;
-    private float speedInputY;
-    private bool attacking;
     public Rigidbody centerOfMass;
-    public Audio aud;
     
+    /*  defines the strategy an enemy bot will take
+        slow: walks toward player
+        fast: runs toward player
+        orbit: runs at the player in a circular motion, attacking from behind
+        charge: sprints at the player with its arms back, attacking with a headbutt, 
+            and stunning itself on a collision with any object, including the player
+        smart: attempts to intercept the player's current path
+        passive: does nothing
+        random: chooses a random destination and navigates there, ignoring player */
     public enum Behavior {
         Slow,
         Fast,
@@ -30,24 +26,17 @@ public class EnemyTest : MonoBehaviour
         Random
     }
 
-    public void Initialize(Behavior behavior, int hp)
+    /*  called by the waveManager to initialize the hp and behavior of the enemy    */
+    public override void Initialize(Behavior behavior, int hp)
     {
+        base.Initialize(behavior, hp);
         this.behavior = behavior;
-        maxHealth = (float)hp;
     }
 
-    void Start()
+    /*  Start is called before the first frame update */
+    private void Start()
     {
-        aud = GameObject.FindWithTag("Audio").GetComponent<Audio>();
-        player = GameObject.FindWithTag("Player");
-        invincible = false;
-        health = maxHealth;
-        attacking = false;
-        speedInputX = 0.0f;
-        speedInputY = 0.5f;
-        live = true;
-        anim = GetComponent<Animator>();
-        Physics.IgnoreLayerCollision (9, 8, true);
+        base.Start();
         SetRigidBody(true);
         SetColliders(false);
         if (behavior == Behavior.Slow) 
@@ -76,14 +65,13 @@ public class EnemyTest : MonoBehaviour
         {
             speed = Random.Range(3.0f, 5.0f);
         }
-        agent.speed = speed;
         anim.SetInteger("behavior",(int)behavior);
-        //live = false;
     }
 
-    // Update is called once per frame
-    void Update()
+    /*  Update is called once per frame */
+    private void Update()
     {
+        base.Update();
         if (live)
         {
             if (behavior == Behavior.Slow ) {
@@ -211,27 +199,11 @@ public class EnemyTest : MonoBehaviour
                     }
                 }
             }
-            anim.SetFloat("speedX", speedInputX);
-            anim.SetFloat("speedY", speedInputY);
         }
     }
 
-    public Vector3 FindNearestPointOnLine(Vector3 origin, Vector3 direction, float len, Vector3 point)
-    {
-        Vector3 end = origin + direction * len; 
-        //Get heading
-        Vector3 heading = (end - origin);
-        float magnitudeMax = heading.magnitude;
-        heading.Normalize();
-
-        //Do projection from the point but clamp it
-        Vector3 lhs = point - origin;
-        float dotP = Vector3.Dot(lhs, heading);
-        dotP = Mathf.Clamp(dotP, 0f, magnitudeMax);
-        return origin + heading * dotP;
-    }
-
-    void SetRigidBody(bool value)
+    /*  sets all limb rigidbodies' active states to value, and sets the primary body rigidbody to !value */
+    private void SetRigidBody(bool value)
     {
         Rigidbody[] bodies = GetComponentsInChildren<Rigidbody>();
         foreach (Rigidbody rb in bodies)
@@ -241,7 +213,8 @@ public class EnemyTest : MonoBehaviour
         GetComponent<Rigidbody>().isKinematic = !value;
     }
 
-    void SetColliders(bool value)
+    /*  sets all limb colliders' active states to value, and sets the primary body collider to !value */
+    private void SetColliders(bool value)
     {
         Collider[] colliders = GetComponentsInChildren<Collider>();
         foreach (Collider c in colliders)
@@ -255,7 +228,7 @@ public class EnemyTest : MonoBehaviour
         GetComponent<Collider>().enabled = !value;
     }
 
-    void OnCollisionEnter(Collision other)
+    private void OnCollisionEnter(Collision other)
     {
         if (behavior == Behavior.Charge)
         {
@@ -271,62 +244,33 @@ public class EnemyTest : MonoBehaviour
         }
     }
 
-    void Stun()
+    /*  called when the enemy is stunned */
+    private void Stun()
     {
         stunned = true;
     }
 
-    void EndStun()
+    /*  called when the enemy is no longer stunned */
+    private void EndStun()
     {
         stunned = false;
     }
 
-    public void Punch()
-    {
-        anim.SetTrigger("punch");
-        attacking = true;
-        StartCoroutine("PunchTimerCoroutine");
-    }
-
-    public void TakeDamage(Vector3 angle, float strength, float damage)
+    /*  called when the enemy takes damage from an outside source
+        the angle and strength of the force are passed in, along with damage recieved */
+    public override void TakeDamage(Vector3 angle, float strength, float damage)
     {
         if (!invincible)
         {
-            aud.HitAudio();
-            health -= damage;
-            if(health > 0){Debug.Log(health);}
+            base.TakeDamage(angle, strength, damage);
             GetComponent<Rigidbody>().AddRelativeForce(angle * strength * 0.4f);
-            invincible = true;
-            if (health <= 0.0f)
-            {
-                Die(angle, strength); 
-            }
-            else
-            {
-                StartCoroutine("InvincibleCoroutine");
-            }
         }
     }
 
-    IEnumerator InvincibleCoroutine()
+    /*  called when the enemy runs out of health and dies */
+    protected override void Die(Vector3 angle, float strength)
     {
-        for (int i = 0; i < 5; i++)
-        {
-            yield return new WaitForSeconds(0.05F);
-
-        }
-        invincible = false;
-    }
-
-    IEnumerator PunchTimerCoroutine()
-    {
-        yield return new WaitForSeconds(0.75f);
-        attacking = false;
-    }
-
-    public void Die(Vector3 angle, float strength)
-    {
-        live = false;
+        base.Die(angle, strength);
         GetComponent<Animator>().enabled = false;
         SetRigidBody(false);
         SetColliders(true);
@@ -336,18 +280,41 @@ public class EnemyTest : MonoBehaviour
             rb.AddRelativeForce(angle * strength);
         }*/
         centerOfMass.AddRelativeForce(angle * strength);
+        PlayerPrefs.SetInt("numEnemiesDefeated", PlayerPrefs.GetInt("numEnemiesDefeated") + 1);
+        if (maxHealth == 1)
+        {
+            PlayerPrefs.SetInt("numWhiteEnemiesDefeated", PlayerPrefs.GetInt("numWhiteEnemiesDefeated") + 1);
+        }
+        else if (maxHealth == 2)
+        {
+            PlayerPrefs.SetInt("numYellowEnemiesDefeated", PlayerPrefs.GetInt("numYellowEnemiesDefeated") + 1);
+        }
+        else if (maxHealth == 3)
+        {
+            PlayerPrefs.SetInt("numRedEnemiesDefeated", PlayerPrefs.GetInt("numRedEnemiesDefeated") + 1);
+        }
+        WaveManager.WM.UnlockHats();
         //GetComponent<Rigidbody>().AddRelativeForce(-1 * transform.forward * strength);
-        Destroy(gameObject, 2);
-        WaveManager.WM.InformDeath();
+        Destroy(gameObject, 5);
     }
 
-    public static Vector3 RandomNavSphere (Vector3 origin, float distance, int layermask) {
-        Vector3 randomDirection = UnityEngine.Random.insideUnitSphere * distance;
-        randomDirection += origin;
-        UnityEngine.AI.NavMeshHit navHit;
-        UnityEngine.AI.NavMesh.SamplePosition (randomDirection, out navHit, distance, layermask);
-        return navHit.position;
+    /*  cooldown for invincibility frames */
+    protected override IEnumerator InvincibleCoroutine()
+    {
+        invincible = true;
+        for (int i = 0; i < 5; i++)
+        {
+            yield return new WaitForSeconds(0.05F);
+        }
+        invincible = false;
     }
 
+    /*  cooldown for a punch attach */
+    protected override IEnumerator PunchCoroutine()
+    {
+        attacking = true;
+        yield return new WaitForSeconds(0.75f);
+        attacking = false;
+    }
 
 }

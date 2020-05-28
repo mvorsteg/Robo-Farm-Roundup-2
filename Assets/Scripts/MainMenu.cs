@@ -38,6 +38,11 @@ public class MainMenu : MonoBehaviour
     public Score[] highScores;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI scoreText2;
+    public Toggle punchToggle;
+    public Toggle lookToggle;
+    public Slider musicBar;
+    public Slider soundBar;
+    public Slider sensBar;
     public GameObject input;
     public Text button;
     public TextMeshProUGUI tips;
@@ -61,6 +66,10 @@ public class MainMenu : MonoBehaviour
 
     void Start()
     {
+
+        // set default playerprefs
+        SetPrefs();
+
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
         if (leaderboardMode)
@@ -75,6 +84,30 @@ public class MainMenu : MonoBehaviour
             menu.SetActive(true);
             leaderboard.SetActive(false);
         }
+    }
+
+    void SetPrefs()
+    {
+        // set default prefs in case the settings have never been used
+        if (!PlayerPrefs.HasKey("sensitivity"))
+            PlayerPrefs.SetFloat("sensitivity", 1.0f);
+        if (!PlayerPrefs.HasKey("invertPunch"))
+            PlayerPrefs.SetInt("invertPunch", 1);
+        if (!PlayerPrefs.HasKey("inverCamera"))
+            PlayerPrefs.SetInt("invertCamera", -1);
+        if (!PlayerPrefs.HasKey("musicVol"))
+            PlayerPrefs.SetFloat("musicVol", 0.0f);
+        if (!PlayerPrefs.HasKey("soundVol"))
+            PlayerPrefs.SetFloat("soundVol", 0.0f);
+        // load in previous prefs
+        lookToggle.isOn = PlayerPrefs.GetInt("invertCamera") == 1;
+        punchToggle.isOn = PlayerPrefs.GetInt("invertPunch") == -1;
+        sensBar.value = PlayerPrefs.GetFloat("sensitivity") * 10;
+        musicBar.value = PlayerPrefs.GetFloat("musicVol");
+        soundBar.value = PlayerPrefs.GetFloat("soundVol");
+        mix.SetFloat("musicVol", PlayerPrefs.GetFloat("musicVol"));
+        mix.SetFloat("soundVol", PlayerPrefs.GetFloat("soundVol"));
+
     }
 
     public void ClickSound()
@@ -95,10 +128,12 @@ public class MainMenu : MonoBehaviour
     public void SetMusic(float volume)
     {
         mix.SetFloat("musicVol", volume);
+        PlayerPrefs.SetFloat("musicVol", volume);
     }
     public void SetVolume(float volume)
     {
         mix.SetFloat("soundVol", volume);
+        PlayerPrefs.SetFloat("soundVol", volume);
     }
 
     public void LeaderboardPreview()
@@ -219,6 +254,21 @@ public class MainMenu : MonoBehaviour
             PlayerPrefs.SetInt("HSPoints" + i, 0);
             PlayerPrefs.SetString("HSName" + i, "");
         }
+    }
+
+    public void SetSensitivity(float sensitivity)
+    {
+        PlayerPrefs.SetFloat("sensitivity", sensitivity/10);
+    }
+
+    public void SetInvertPunch(bool val)
+    {
+        PlayerPrefs.SetInt("invertPunch", val ? -1 : 1);
+    }
+
+    public void SetInvertCamera(bool val)
+    {
+        PlayerPrefs.SetInt("invertCamera", val ? 1 : -1);
     }
 
     IEnumerator EasterEggCoroutine()

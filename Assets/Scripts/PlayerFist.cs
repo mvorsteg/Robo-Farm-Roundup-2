@@ -6,6 +6,8 @@ public class PlayerFist : MonoBehaviour
 {
     public string target_tag;
     public GameObject player;
+    public int layerNum = 1;
+    public float damage = 1.0f;
     private Player playerScript;
     private Animator anim;
 
@@ -17,16 +19,16 @@ public class PlayerFist : MonoBehaviour
 
     void OnTriggerEnter(Collider target)
     {
-        if ((anim.GetCurrentAnimatorStateInfo(1).IsName("punch") || anim.GetCurrentAnimatorStateInfo(1).IsName("punch_left")) && target.tag == target_tag)
+        if (this.enabled == true && (anim.GetCurrentAnimatorStateInfo(layerNum).IsName("punch") || anim.GetCurrentAnimatorStateInfo(layerNum).IsName("punch_left")) && target.tag == target_tag)
         {
             Vector3 angle = player.GetComponent<Transform>().forward;
             if (target_tag == "Enemy")
             {
-                target.gameObject.GetComponent<EnemyTest>().TakeDamage(new Vector3(-angle.x, 0.2f, -angle.z), Random.Range(200f, 1000f), 1.0f);
+                target.gameObject.GetComponent<Enemy>().TakeDamage(new Vector3(-angle.x, 0.2f, -angle.z), Random.Range(200f, 1000f), damage);
             }
             else if (target_tag == "Player")
             {
-                target.gameObject.GetComponent<Player>().TakeDamage(new Vector3(-angle.x, 0.2f, -angle.z), 200f, 1.0f);
+                target.gameObject.GetComponent<Player>().TakeDamage(new Vector3(-angle.x, 0.2f, -angle.z), 200f, damage);
             }
             
         }

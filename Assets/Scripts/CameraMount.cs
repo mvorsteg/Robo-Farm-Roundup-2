@@ -6,6 +6,10 @@ public class CameraMount : MonoBehaviour
 {
 
     public Transform player;
+
+    private float sensitivity = 1.0f;
+    private int invert = 1;
+
     const float xMin = 0f;
     const float xMax = 60f;
 
@@ -13,6 +17,8 @@ public class CameraMount : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        sensitivity = PlayerPrefs.GetFloat("sensitivity");
+        invert = PlayerPrefs.GetInt("invertCamera");
         camRotation = transform.localRotation;
     }
 
@@ -26,7 +32,9 @@ public class CameraMount : MonoBehaviour
         transform.rotation = q;
         */
 
-        camRotation.x += Input.GetAxis("Mouse Y"); //look up/down
+        //Debug.Log(Input.GetAxis("Mouse Y"));
+        if (Mathf.Abs(Input.GetAxis("Mouse Y")) > 0.5)
+            camRotation.x += Input.GetAxis("Mouse Y") * sensitivity * invert; //look up/down
         //camRotation.y += Input.GetAxis("Mouse X"); //look left/right
         
         camRotation.x = Mathf.Clamp(camRotation.x, xMin, xMax);
