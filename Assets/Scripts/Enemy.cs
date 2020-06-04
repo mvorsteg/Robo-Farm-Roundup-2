@@ -21,7 +21,7 @@ public abstract class Enemy : MonoBehaviour
     protected Audio aud;
     protected GameObject player;
 
-    protected void Start()
+    protected virtual void Start()
     {
         health = maxHealth;
         aud = GameObject.FindWithTag("Audio").GetComponent<Audio>();
@@ -33,7 +33,7 @@ public abstract class Enemy : MonoBehaviour
         agent.speed = speed;
     }
 
-    protected void Update()
+    protected virtual void Update()
     {
         anim.SetFloat("speedX", speedInputX);
         anim.SetFloat("speedY", speedInputY);

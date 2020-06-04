@@ -31,6 +31,36 @@ public class Player : MonoBehaviour
     public Audio aud;
     public GameObject hats;  
 
+    public CameraMount CameraMount;
+
+    private PlayerControls controls;
+    private Vector2 movement;
+    private Vector2 look;
+
+    private void Awake() 
+    {
+        controls = new PlayerControls();
+
+        controls.Gameplay.Move.performed += ctx => movement = ctx.ReadValue<Vector2>();
+        controls.Gameplay.Move.canceled += ctx => movement = Vector2.zero;
+
+        controls.Gameplay.Look.performed += ctx => look = ctx.ReadValue<Vector2>();
+        controls.Gameplay.Look.canceled += ctx => look = Vector2.zero;
+
+        controls.Gameplay.PunchLeft.performed += ctx => Punch(false);
+        controls.Gameplay.PunchRight.performed += ctx => Punch(true);
+        controls.Gameplay.Boost.performed += ctx => Roll(movement.y);
+
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    void OnEnable()
+    {
+        controls.Gameplay.Enable();
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -47,8 +77,7 @@ public class Player : MonoBehaviour
         live = true;
         rolling = false;
         health = maxHealth;
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
+        
         punching = false;
         int hatIndex = PlayerPrefs.GetInt("hat");
         if (hatIndex > 0) {
@@ -61,12 +90,13 @@ public class Player : MonoBehaviour
     void Update()
     {
         if (live)
-        {
-            transform.Rotate(0, Input.GetAxis("Mouse X") * sensitivity, 0);
-            float speedInputX = Input.GetAxis("Horizontal");
-            anim.SetFloat("speedX", speedInputX);
-            float speedInputY = Input.GetAxis("Vertical");
-            anim.SetFloat("speedY", speedInputY);
+        {            
+            anim.SetFloat("speedX", movement.x, 1f, Time.deltaTime * 10f);
+            anim.SetFloat("speedY", movement.y, 1f, Time.deltaTime * 10f);
+            transform.Rotate(0, look.x * sensitivity *2f* Time.deltaTime, 0);
+            CameraMount.Rotate(look.y * sensitivity *2f*Time.deltaTime);
+            Debug.Log("look " + look.x + " " + look.y);
+            /*
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
                 Punch(false);
@@ -77,15 +107,16 @@ public class Player : MonoBehaviour
             }
             else if (Input.GetKeyDown(KeyCode.Space))
             {
-                Roll(speedInputY);
+                Roll(movement.y);
             }
+            */
             if (rolling)
             {
                 //transform.Translate(Vector3.forward*1.5f*speed*Time.deltaTime);
             }
             else
             {
-                transform.Translate((Vector3.forward*speedInputY + Vector3.right*speedInputX)*speed *Time.deltaTime);
+                transform.Translate((Vector3.forward*movement.y + Vector3.right*movement.x)*speed *Time.deltaTime);
             }
             if (regenFuel && fuel < 5)
             {
@@ -101,7 +132,7 @@ public class Player : MonoBehaviour
         }
         else
         {
-            mainCamera.GetComponent<Transform>().Rotate(-Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X"), 0);
+            mainCamera.GetComponent<Transform>().Rotate(-look.y, look.x, 0);
             //mainCamera.GetComponent<Transform>().Rotate(-Input.GetAxis("Mouse Y"), 0, 0);
         }
     }

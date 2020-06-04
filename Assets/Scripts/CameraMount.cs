@@ -22,6 +22,17 @@ public class CameraMount : MonoBehaviour
         camRotation = transform.localRotation;
     }
 
+    public void Rotate(float val)
+    {
+        if (Mathf.Abs(val) > 0.5)
+            camRotation.x += val * sensitivity * invert; //look up/down
+        //camRotation.y += Input.GetAxis("Mouse X"); //look left/right
+        
+        camRotation.x = Mathf.Clamp(camRotation.x, xMin, xMax);
+        //Debug.Log(camRotation.x);
+        transform.localRotation = Quaternion.Euler(camRotation.x, camRotation.y, camRotation.z);
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -33,13 +44,5 @@ public class CameraMount : MonoBehaviour
         */
 
         //Debug.Log(Input.GetAxis("Mouse Y"));
-        if (Mathf.Abs(Input.GetAxis("Mouse Y")) > 0.5)
-            camRotation.x += Input.GetAxis("Mouse Y") * sensitivity * invert; //look up/down
-        //camRotation.y += Input.GetAxis("Mouse X"); //look left/right
-        
-        camRotation.x = Mathf.Clamp(camRotation.x, xMin, xMax);
-        //Debug.Log(camRotation.x);
-        transform.localRotation = Quaternion.Euler(camRotation.x, camRotation.y, camRotation.z);
-
     }
 }

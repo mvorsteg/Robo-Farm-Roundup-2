@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Boss : Enemy
+public class Boss2 : Enemy
 {
-    public PlayerFist fist;
-    
-    //private int stage = 0;
+    public PlayerFist drill;
+    public GameObject drillObj;
 
+    private int attackPattern;
+    
     /*  Start is called before the first frame update */
     protected override void Start()
     {
@@ -21,6 +22,7 @@ public class Boss : Enemy
         base.Update();
         if (live && !attacking)
         {
+            drillObj.transform.Rotate(8, 0, 0, Space.Self);
             Vector3 playerPos = player.GetComponent<Transform>().position;
             float dist = Vector3.Distance(GetComponent<Transform>().position, playerPos);
 
@@ -33,7 +35,7 @@ public class Boss : Enemy
                 //do shoot
             }
             // punch player
-            else */if (dist < 2.5f)
+            else */if (dist < 4.5f)
             {
                 agent.ResetPath();
                 speedInputY = 0.0F;
@@ -46,14 +48,18 @@ public class Boss : Enemy
                 speedInputY = 0.5F;
                 agent.SetDestination(player.transform.position);
             }
-            anim.SetFloat("speedY", speedInputY);
-        }   
+        }
+        // spin drill faster if attacking
+        else if (attacking)
+        {
+            drillObj.transform.Rotate(36, 0, 0, Space.Self);
+        }
     }
 
     /*  sets the PlayerFist script to be active or inactive, to prevent unnecessary collisions */
     public void SetFist(int state)
     {
-        fist.enabled = (state == 1);
+        drill.enabled = (state == 1);
     }
 
     /*  called when the enemy takes damage from an outside source
