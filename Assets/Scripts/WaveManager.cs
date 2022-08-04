@@ -32,24 +32,43 @@ public class WaveManager : MonoBehaviour
     public GameObject waveText;
     public GameObject gameOver;
     public GameObject anyKey;
+    public GameObject bossBar;
     public Audio aud;
     public Material white;
     public Material yellow;
     public Material red;
     public Material blue;
+    public Material boss2;
+    public Material boss3;
+
+    public Image bossBarHp;
 
     private Queue<Tuple> queue;
 
     private int numEnemy = 0;
     private int wave = 0;
     private int bossWaveCounter;
+    private PlayerControls controls;
     
     private readonly int limit = 10;
+
+    private void Awake() 
+    {
+        controls = new PlayerControls();
+        controls.GameOverScreen.AnyKey.performed += ctx => EndGame(wave-1);
+    }
+
+    void OnDisable()
+    {
+        controls.GameOverScreen.Disable();
+    }
+
 
     // Start is called before the first frame update
     void Start()
     {
-        bossWaveCounter = Random.Range(3, 6);
+        bossBar.SetActive(false);
+        bossWaveCounter = 1;//Random.Range(3, 6);
         WM = this;
         queue = new Queue<Tuple>();
         StartCoroutine("NextWaveCoroutine");
@@ -73,10 +92,27 @@ public class WaveManager : MonoBehaviour
             // boss wave
             Debug.Log("Enqueueing boss");
             bossWaveCounter = Random.Range(3,6);
-            waveList.Add(new Tuple(EnemyTest.Behavior.Passive, 10, blue, 1));
+            int bossNum = Random.Range(1,4);
+            waveList.Add(new Tuple(EnemyTest.Behavior.Passive, 10, bossNum == 3 ? boss3 : (bossNum == 2 ? boss2 : blue), bossNum));
+            bossBar.SetActive(true);
+            Text bossText = bossBar.GetComponentInChildren<Text>();
+            bossBarHp.fillAmount = 1;
+            switch(bossNum)
+            {
+                case 1 :
+                    bossText.text = "Goliath";
+                    break;
+                case 2 :
+                    bossText.text = "Black Decker";
+                    break;
+                case 3 :
+                    bossText.text = "Sherman";
+                    break;
+            }
         }
         else
         {
+            bossBar.SetActive(false);
             // regular wave
             while (waveCredits > 0)
             {
@@ -251,11 +287,7 @@ public class WaveManager : MonoBehaviour
         }
         yield return new WaitForSeconds(2.0f);
         anyKey.SetActive(true);
-        while(!Input.anyKey)
-        {
-            yield return null;
-        }
-        EndGame(wave-1);
+        controls.GameOverScreen.Enable();
     }
 
     /*  switches to the leaderboard scene */

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {   
@@ -23,11 +24,12 @@ public class Player : MonoBehaviour
     private bool invincible;
     private bool regenFuel;
     private float health;
-    public float maxHealth;
+    public float maxHealth = 5f;
     private bool live;
     private float fuel;
-    public GameObject healthBar;
-    public GameObject fuelBar;
+    public float maxFuel = 5f;
+    public Image healthBar;
+    public Image fuelBar;
     public Audio aud;
     public GameObject hats;  
 
@@ -59,6 +61,11 @@ public class Player : MonoBehaviour
     void OnEnable()
     {
         controls.Gameplay.Enable();
+    }
+
+    void OnDisable()
+    {
+        controls.Gameplay.Disable();
     }
 
     // Start is called before the first frame update
@@ -93,9 +100,10 @@ public class Player : MonoBehaviour
         {            
             anim.SetFloat("speedX", movement.x, 1f, Time.deltaTime * 10f);
             anim.SetFloat("speedY", movement.y, 1f, Time.deltaTime * 10f);
-            transform.Rotate(0, look.x * sensitivity *2f* Time.deltaTime, 0);
+            transform.Rotate(0, look.x * sensitivity * 2f * Time.deltaTime, 0);
+            //GetComponent<Rigidbody>().transform.rotation = Quaternion.Euler(look);
             CameraMount.Rotate(look.y * sensitivity *2f*Time.deltaTime);
-            Debug.Log("look " + look.x + " " + look.y);
+            //Debug.Log("look " + look.x + " " + look.y);
             /*
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
@@ -121,8 +129,8 @@ public class Player : MonoBehaviour
             if (regenFuel && fuel < 5)
             {
                 fuel += 0.02f;
-                float x = fuel / 5;
-                fuelBar.transform.localScale = new Vector3(x, fuelBar.transform.localScale.y, fuelBar.transform.localScale.z);
+                float x = fuel / maxFuel;
+                fuelBar.fillAmount = fuel / maxFuel;
             }
             if (transform.position.y < -10)
             {
@@ -151,19 +159,19 @@ public class Player : MonoBehaviour
     void Roll(float speedDir)
     {
         if (speedDir < 0 && fuel >= 1)
-        {
-            fuel -= 1;
+        {   
             anim.SetTrigger("hop");
             StartCoroutine("HopCoroutine");
-            StartCoroutine("FuelBarCoroutine");
+            StartCoroutine(BarCoroutine(fuel / maxFuel, (fuel - 1) / maxFuel, 0.5f, fuelBar));
+            fuel -= 1;
         }
         else if (fuel >= 2)
         {
             aud.Roll();
-            fuel -= 2;
             anim.SetTrigger("roll");
             StartCoroutine("RollCoroutine");
-            StartCoroutine("FuelBarCoroutine");
+            StartCoroutine(BarCoroutine(fuel / maxFuel, (fuel - 2) / maxFuel, 0.5f, fuelBar));
+            fuel -= 2;
         }
     }
     
@@ -172,8 +180,8 @@ public class Player : MonoBehaviour
         if (!invincible)
         {
             aud.HitAudio();
+            StartCoroutine(BarCoroutine(health / maxHealth, (health - damage) / maxHealth, 0.5f, healthBar));
             health -= damage;
-            StartCoroutine("HealthHitCoroutine");
             invincible = true;
             if (health <= 0)
             {
@@ -188,8 +196,8 @@ public class Player : MonoBehaviour
 
     public void RestoreHealth()
     {
+        StartCoroutine(BarCoroutine(health, maxHealth, 2f, healthBar));
         health = maxHealth;
-        StartCoroutine("HealthRestoreCoroutine");
     }
 
     IEnumerator RollCoroutine()
@@ -220,54 +228,14 @@ public class Player : MonoBehaviour
         regenFuel = true;
     }
 
-    IEnumerator FuelBarCoroutine()
+    public static IEnumerator BarCoroutine(float oldAmount, float newAmount, float maxTime, Image bar)
     {
-        float newFuel = fuel / 5;
-        float x = fuelBar.transform.localScale.x;
-        float y = fuelBar.transform.localScale.y;
-        float z = fuelBar.transform.localScale.z;
-        while (x > newFuel)
+        float elapsedTime = 0f;
+        while (elapsedTime < maxTime)
         {
-            x -= 0.05f;
-            if (x < newFuel) {
-                x = newFuel;
-            }
-            fuelBar.transform.localScale = new Vector3(x, y, z);
-            yield return new WaitForSeconds(0.01f);
-        }
-    }
-
-    IEnumerator HealthHitCoroutine()
-    {
-        float newHealth = health / maxHealth;
-        float x = healthBar.transform.localScale.x;
-        float y = healthBar.transform.localScale.y;
-        float z = healthBar.transform.localScale.z;
-        while (x > newHealth)
-        {
-            x -= 0.05f;
-            if (x < newHealth) {
-                x = newHealth;
-            }
-            healthBar.transform.localScale = new Vector3(x, y, z);
-            yield return new WaitForSeconds(0.01f);
-        }
-    }
-
-    IEnumerator HealthRestoreCoroutine()
-    {
-        float newHealth = health / maxHealth;
-        float x = healthBar.transform.localScale.x;
-        float y = healthBar.transform.localScale.y;
-        float z = healthBar.transform.localScale.z;
-        while (x < newHealth)
-        {
-            x += 0.01f;
-            if (x > newHealth) {
-                x = newHealth;
-            }
-            healthBar.transform.localScale = new Vector3(x, y, z);
-            yield return new WaitForSeconds(0.01f);
+            elapsedTime += Time.deltaTime;
+            bar.fillAmount = Mathf.Lerp(oldAmount, newAmount, elapsedTime / maxTime);
+            yield return null;
         }
     }
 
@@ -287,6 +255,7 @@ public class Player : MonoBehaviour
 
     public void Fall()
     {
+        controls.Gameplay.Disable();
         aud.Death();
         live = false;
         health = 0f;
@@ -299,6 +268,7 @@ public class Player : MonoBehaviour
 
     public void Die()
     {
+        controls.Gameplay.Disable();
         aud.Death();
         live = false;
         GetComponent<Animator>().enabled = false;
@@ -335,7 +305,11 @@ public class Player : MonoBehaviour
     {
         if (other.gameObject.tag == "Enemy" && rolling)
         {
-            other.gameObject.GetComponent<Enemy>().TakeDamage(Vector3.forward, 1000, 1f);
+            Enemy enemy = other.transform.GetComponent<Enemy>();
+            if (enemy != null)
+            {
+                enemy.TakeDamage(Vector3.forward, 1000, 1f);
+            }
         }
     }
 }

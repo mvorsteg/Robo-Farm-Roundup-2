@@ -59,7 +59,7 @@ ModelImporter:
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
       events:
-      - time: 0.15151516
+      - time: 0.117032394
         functionName: SetFist
         data: 
         objectReferenceParameter: {instanceID: 0}

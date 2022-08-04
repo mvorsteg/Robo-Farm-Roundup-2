@@ -24,13 +24,24 @@ public class PlayerFist : MonoBehaviour
             Vector3 angle = player.GetComponent<Transform>().forward;
             if (target_tag == "Enemy")
             {
-                target.gameObject.GetComponent<Enemy>().TakeDamage(new Vector3(-angle.x, 0.2f, -angle.z), Random.Range(200f, 1000f), damage);
+                Enemy e = target.gameObject.GetComponent<Enemy>();
+                if (e != null)
+                {
+                    e.TakeDamage(new Vector3(-angle.x, 0.2f, -angle.z), Random.Range(200f, 1000f), damage);
+                }
+                else
+                {
+                    Cannonball c = target.gameObject.GetComponent<Cannonball>();
+                    if (c != null)
+                    {
+                        c.Hit(player.transform.forward);
+                    }
+                }
             }
             else if (target_tag == "Player")
             {
                 target.gameObject.GetComponent<Player>().TakeDamage(new Vector3(-angle.x, 0.2f, -angle.z), 200f, damage);
             }
-            
         }
     }
 }

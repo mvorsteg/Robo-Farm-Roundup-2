@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Boss : Enemy
+public class Boss1 : Enemy
 {
     public PlayerFist fist;
     
@@ -62,6 +62,7 @@ public class Boss : Enemy
     {
         if (!invincible)
         {
+            StartCoroutine(Player.BarCoroutine(health / maxHealth, (health - damage) / maxHealth, 0.5f, WaveManager.WM.bossBarHp));
             base.TakeDamage(angle, strength, damage);
             //anim.SetTrigger("hit");
             if (health < 5)

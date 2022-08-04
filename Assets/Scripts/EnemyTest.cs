@@ -36,16 +36,15 @@ public class EnemyTest : Enemy
     /*  Start is called before the first frame update */
     protected override void Start()
     {
-        base.Start();
         SetRigidBody(true);
         SetColliders(false);
         if (behavior == Behavior.Slow) 
         {
-            speed = Random.Range(2.5f, 3.5f);
+            speed = 5f;//Random.Range(5f, 7f);
         } 
         if (behavior == Behavior.Fast)
         {
-            speed = Random.Range(3.5f, 6.0f);
+            speed = 10f;//Random.Range(3.5f, 6.0f);
         }
         if (behavior == Behavior.Random)
         {
@@ -53,18 +52,19 @@ public class EnemyTest : Enemy
         }
         if (behavior == Behavior.Orbit)
         {
-            speed = Random.Range(3.0f, 5.0f);
+            speed = 5f;//Random.Range(3.0f, 5.0f);
         }
         if (behavior == Behavior.Charge)
         {
             attacking = true;
-            speed = Random.Range(7.0f, 12.0f);
+            speed = 15f;//Random.Range(7.0f, 12.0f);
             //agent.angularSpeed = 0.01f;
         }
         if (behavior == Behavior.Smart)
         {
-            speed = Random.Range(3.0f, 5.0f);
+            speed = 5f;//Random.Range(3.0f, 5.0f);
         }
+        base.Start();
         anim.SetInteger("behavior",(int)behavior);
     }
 

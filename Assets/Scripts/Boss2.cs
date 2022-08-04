@@ -1,19 +1,23 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class Boss2 : Enemy
 {
     public PlayerFist drill;
     public GameObject drillObj;
 
-    private int attackPattern;
+    private int zigzagCount;
+    private float timeToNewDest = 0;
     
     /*  Start is called before the first frame update */
     protected override void Start()
     {
         base.Start();
+        zigzagCount = Random.Range(0,6);
         SetFist(0);
+        agent.enabled = true;
     }
 
     /*  Update is called once per frame */
@@ -34,19 +38,54 @@ public class Boss2 : Enemy
                 speedInputY = 0.0F;
                 //do shoot
             }
-            // punch player
-            else */if (dist < 4.5f)
+            // punch player*/
+            // if boss zigzags around the player
+            if (zigzagCount > 0)
+            {
+                timeToNewDest -= Time.deltaTime;
+                // find a position close to player
+                if ((timeToNewDest <= 0) || (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance && !agent.hasPath || agent.velocity.sqrMagnitude == 0f))
+                {
+                    //Debug.Log("find new path");
+                    zigzagCount--;
+                    Vector3 pos = playerPos + new Vector3(Random.Range(-10f, 10f), 0 , Random.Range(-10f, 10f));
+                    UnityEngine.AI.NavMeshHit navHit;
+                    // if path is valid go there
+                    if (UnityEngine.AI.NavMesh.SamplePosition (pos, out navHit, 3, -1))
+                    {
+                        timeToNewDest = Random.Range(1.2f, 2.7f);
+                        agent.SetDestination(navHit.position);
+                    }
+                    // else head straight for player
+                    else
+                    {
+                        zigzagCount = 0;
+                        agent.SetDestination(playerPos);
+                    }
+                }
+            }
+            else
+            {
+                agent.SetDestination(player.transform.position);
+            }
+            if (dist < 2.5f)
             {
                 agent.ResetPath();
                 speedInputY = 0.0F;
                 if (!attacking)
-                    Punch();
+                {
+                    if (Random.Range(0,10) < 7)
+                        anim.SetTrigger("stab");
+                    else
+                        anim.SetTrigger("swing");
+                    StartCoroutine("PunchCoroutine");
+                }
             }
             // walk to player
             else
             {
                 speedInputY = 0.5F;
-                agent.SetDestination(player.transform.position);
+                //
             }
         }
         // spin drill faster if attacking
@@ -68,12 +107,10 @@ public class Boss2 : Enemy
     {
         if (!invincible)
         {
+            StartCoroutine(Player.BarCoroutine(health / maxHealth, (health - damage) / maxHealth, 0.5f, WaveManager.WM.bossBarHp));
             base.TakeDamage(angle, strength, damage);
             //anim.SetTrigger("hit");
-            if (health < 5)
-            {
-                anim.SetTrigger("stomp");
-            }
+            
         }
     }
 
@@ -82,7 +119,7 @@ public class Boss2 : Enemy
     {
         base.Die(angle, strength);
         anim.SetTrigger("die");
-        PlayerPrefs.SetInt("numBoss1Defeated", PlayerPrefs.GetInt("numBoss1Defeated") + 1);
+        PlayerPrefs.SetInt("numBoss2Defeated", PlayerPrefs.GetInt("numBoss2Defeated") + 1);
         WaveManager.WM.UnlockHats();
         Destroy(gameObject, 5);
     }
@@ -101,5 +138,6 @@ public class Boss2 : Enemy
         attacking = true;
         yield return new WaitForSeconds(2.25f);
         attacking = false;
+        zigzagCount = Random.Range(1, 6);
     }
 }
